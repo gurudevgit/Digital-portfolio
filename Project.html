@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Typing Pro</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1abc9c, #3498db);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .quote-display {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            line-height: 2rem;
+            color: #2c3e50;
+            min-height: 150px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+            border: 3px solid var(--primary);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 1rem 0;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            color: #2c3e50;
+        }
+
+        .keyboard {
+          display:grid; 
+          grid-template-columns: repeat(10,1fr); 
+          gap:.5rem; 
+          margin-top:.5rem; 
+          padding:.5rem; 
+          background:#fff; 
+          border-radius:.5rem; 
+          box-shadow:.5px .5px .5px rgba(0,0,0,.3); 
+      }
+
+      .key { 
+          background:#3498db; 
+          color:white; 
+          text-align:center; 
+          padding:.5rem; 
+          border-radius:.25rem; 
+          transition:.3s; 
+      } 
+
+      .key:hover { 
+          background:#2980b9; 
+      }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Speed Typing Pro</h1>
+        <div class="quote-display" id="quoteDisplay">
+            Loading challenge...
+        </div>
+        <textarea 
+            class="input-field" 
+            id="userInput" 
+            placeholder="Start typing here..."
+        ></textarea>
+        
+        <div class="stats">
+            <div>Speed: <span id="speed">0</span> WPM</div>
+            <div>Accuracy: <span id="accuracy">100</span>%</div>
+        </div>
+
+        <div class="progress-bar">
+           <div class="progress" id="progress"></div>
+       </div>
+
+       <div class="result" id="result"></div>
+
+       <div class="keyboard" id="keyboard"></div>
+    </div>
+
+    <script>
+        const quotes = [
+           "The quick brown fox jumps over the lazy dog",
+           "Programming is the art of telling another human what one wants the computer to do",
+           "In the end, it's not the years in your life that count. It's the life in your years."
+       ];
+
+       let startTime, timer;
+
+       function initGame() {
+           const currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+           document.getElementById('quoteDisplay').innerText = currentQuote;
+
+           document.getElementById('userInput').value = '';
+           document.getElementById('userInput').focus();
+           startTime = null;
+
+           // Reset stats
+           document.getElementById('speed').textContent = '0';
+           document.getElementById('accuracy').textContent = '100';
+           document.getElementById('result').textContent = '';
+           document.getElementById('progress').style.width = '0%';
+
+           // Create keyboard layout
+           createKeyboard();
+       }
+
+       function createKeyboard() {
+           const keyboardDiv = document.getElementById('keyboard');
+           keyboardDiv.innerHTML = '';
+
+           const keys = [
+               'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+               'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L',
+               'Z', 'X', 'C', 'V', 'B', 'N', 'M'
+           ];
+
+           keys.forEach(key => {
+               const keyDiv = document.createElement('div');
+               keyDiv.className = 'key';
+               keyDiv.innerText = key;
+
+               keyboardDiv.appendChild(keyDiv);
+           });
+       }
+
+       document.getElementById('userInput').addEventListener('input', (e) => {
+           const typedText = e.target.value;
+
+           if (!startTime) {
+               startTime = new Date();
+               startTimer();
+           }
+
+           // Update progress
+           const totalLength = document.getElementById('quoteDisplay').innerText.length;
+
+           const progressPercentage = (typedText.length / totalLength) * 100;
+
+           document.getElementById('progress').style.width = `${progressPercentage}%`;
+
+           // Calculate WPM
+           const minutesSpent = (new Date() - startTime) / (1000 * 60);
+           const wpm = Math.round((typedText.split(' ').length / minutesSpent) || 0);
+           
+           document.getElementById('speed').textContent = wpm;
+
+           // Update accuracy
+           let correctChars = typedText.split('').filter((char, index) => char === document.getElementById('quoteDisplay').innerText[index]).length;
+
+           const accuracyPercentage = Math.round((correctChars / typedText.length) * 100) || 100;
+
+           document.getElementById('accuracy').textContent = accuracyPercentage;
+
+           // Show result when finished typing
+           if (typedText === document.getElementById('quoteDisplay').innerText) {
+               clearInterval(timer);
+               showResult(wpm, accuracyPercentage);
+           }
+       });
+
+       function startTimer() {
+           timer = setInterval(() => {
+               if (startTime) {
+                   const secondsElapsed = Math.floor((new Date() - startTime) / 1000);
+                   if (secondsElapsed >= 60) clearInterval(timer); // Stop after a minute
+               }
+           }, 1000);
+       }
+
+       function showResult(wpm, accuracy) {
+           const resultDiv = document.getElementById('result');
+           
+           resultDiv.innerHTML = `You finished!<br>Your speed is ${wpm} WPM with an accuracy of ${accuracy}%.`;
+       }
+
+       initGame();
+    </script>
+</body>
+</html>
